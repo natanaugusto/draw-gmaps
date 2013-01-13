@@ -13,7 +13,10 @@ and open the template in the editor.
         <script type="text/javascript" src="jquery.Gmaps.js"></script>
         <script type="text/javascript">
             $(document).ready(function(){
-                $('.map').Gmaps();
+                Url = 'mt|wFvclbMHYKMSMUOYS[U_@S[Ua@]e@[c@Ye@[g@[e@[e@[i@[k@]q@C[E_@A_@De@Bi@Ai@Ke@Mg@Kc@FYNg@P]\a@V_@La@@]G}@Uc@_@eAy@m@]m@s@o@o@s@aA}@kAoAkAaACaB?kBEsAO[KSESr@MzAB^XbAX\Vh@Tf@Zp@Rl@N~@BpAUnAc@bAi@v@c@p@S\JFR\T`@Rd@T`APpA`@tAb@z@`@d@l@b@r@^j@Vr@\z@\bAd@z@`@h@f@`@r@^hA`@lA`@`@f@Xn@Hn@?t@En@?l@Vj@f@b@lA`@lBb@~BvAhCbBhAlBhA`BJdBWvA_@~BOdAYfAcDrAuEzAiGhDmArCwBRcIoDgEuCmB';
+                Url2 = 'bvrnClt{{Gj@FvBi@fBw@l@w@~@kBhAmBdB_AfBeAnCqAdDq@xCBvCJxCLvEd@~HjDpIfDdHt@nHXbEPdDP`AF|AN`D?`DHnC`@rFtA|Br@xDtCjDhBdC`CdChD';
+                $('.map').Gmaps('PolylineOptions',{strokeColor:'#307BC2'});
+                $('.map').Gmaps('LoadPolylineByUrlEncoded',Url2);
             });
         </script>
         <style>
@@ -21,12 +24,13 @@ and open the template in the editor.
                 display: block;
                 width: 1000px;
                 height: 500px;
+                margin: 10px;
+                border: 2px solid #000;
             }
         </style>
     </head>
     <body>
-        <div class="map">
-            Mapa
-        </div>
+        <div class="map">Mapa</div>
+        <!--<div class="map">Mapa</div>-->
     </body>
 </html>
