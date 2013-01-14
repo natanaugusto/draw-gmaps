@@ -3,10 +3,10 @@
         
         /**
          * Função inicial do sistema
-         * @param div HTML Element
+         * @param Div HTML Element
          */ 
-        initMap: function (div){
-            if(!div) {
+        initMap: function (Div){
+            if(!Div) {
                 console.error('Nenhuma div encontrada');
                 return false;
             }
@@ -40,7 +40,7 @@
             }
             
             //Inicia o map
-            Gmaps.Map = new google.maps.Map(div, options['MapOptions']);
+            Gmaps.Map = new google.maps.Map(Div, options['MapOptions']);
             return Gmaps;
         },
         
@@ -154,10 +154,71 @@
                     }
                     MarkerOptions.icon = icon;
                     
+                    //Indice do novo marcador.
+                    k = Gmaps.Markers.length;
+                    
                     Gmap.Markers.push(new google.maps.Marker(MarkerOptions));
+                    
+                    //Verifica se existe algum texto para relacionar ao marcador
+                    if(e.text) {
+                        //Adiciona uma InfoWindow ao marcador
+                        Gmap = methods['NewInfoWindow'].apply(this,new Array(e.text,Gmap,Gmap.Markers[k]));
+                    }
                 });
                 
                 return $.Gmap = Gmap;
+            } catch (err) {
+                console.error('Erro: '+err);
+            }
+        },
+        
+        /**
+         * Adiciona uma InfoWindow
+         * https://developers.google.com/maps/documentation/javascript/reference?hl=pt-br#InfoWindow
+         * @param Content
+         * @param Gmap object
+         * @param Anchor object
+         * @param InfoWindowOptions
+         * @param Open
+         * @param Event
+         */
+        NewInfoWindow: function (Content,Gmap,Anchor,InfoWindowOptions,Open,Event) {
+            try {
+                
+                //Valida os parametros de entrada
+                if(typeof Gmap != 'object') throw "@param Gmap não foi passado corretamente";
+                
+                if(Anchor)
+                    if(typeof Anchor != 'object') throw "@param Anchor não foi passado corretamente";
+                
+                if(!Content) throw "@param Content não foi enviado";
+                
+                if(!Event) Event = 'click';
+                
+                //Opções de infoWindows
+                if(!InfoWindowOptions) {
+                    InfoWindowOptions = options['InfoWindowOptions'];
+                } else {
+                    InfoWindowOptions = $.extend(options['InfoWindowOptions'],InfoWindowOptions);
+                }
+                
+                InfoWindowOptions.content = Content;
+                
+                k = Gmap.InfoWindows.length;
+                
+                Gmap.InfoWindows.push(new google.maps.InfoWindow(InfoWindowOptions));
+                
+                if(Anchor) {
+                    if(Open) {
+                        Gmap.InfoWindows[k].open(Gmap.Map,Anchor);
+                    }
+                    
+                    consts['Event'].addListener(Anchor,Event,function () {
+                        Gmap.InfoWindows[k].open(Gmap.Map,Anchor);
+                    })
+                }
+                
+                return Gmap;
             } catch (err) {
                 console.error('Erro: '+err);
             }
@@ -202,6 +263,12 @@
         MarkerOptions: {},
         
         /**
+         *Opções de InfoWindows
+         *https://developers.google.com/maps/documentation/javascript/reference?hl=pt-br#InfoWindowOptions
+         */
+        InfoWindowOptions: {},
+        
+        /**
          * Caminho padrão dos icones de marcadores
          */
         PathForIcons: null
@@ -221,7 +288,7 @@
          * Instancia do objeto Google Events
          * https://developers.google.com/maps/documentation/javascript/reference?hl=#event
          */
-        MapEvent: google.maps.event,
+        Event: google.maps.event,
         
         /**
          * Instancia do objeto Google Geometry
