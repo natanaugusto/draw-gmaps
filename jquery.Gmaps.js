@@ -45,6 +45,23 @@
         },
         
         /**
+         * Valida o objeto Gmap
+         * @param Gmap object
+         */
+        ValideteGmap: function (Gmap) {
+            //Verifica se existe algum mapa para ser alterado
+            if(!Gmap) { 
+                if($.Gmap) {
+                    Gmap = $.Gmap;
+                } else{
+                    throw 'Não há nenhnum mapa para carregar a polyline!';
+                }
+            }
+            
+            return Gmap;
+        },
+        
+        /**
          * Carrega uma rota apartir de uma url codificada do google
          * https://developers.google.com/maps/documentation/javascript/geometry?hl=pt-br
          * @param UrlEncoded string
@@ -53,22 +70,14 @@
          */ 
         LoadPolylineByUrlEncoded: function (UrlEncoded,Gmap,PolylineOptions) {
             try {
-                
                 if(!UrlEncoded) throw '@param UrlEncoded está não foi informada';
                 if(typeof UrlEncoded != 'string') throw '@param UrlEncoded não é uma string';
-                
-                //Verifica se existe algum mapa para ser alterado
-                if(!Gmap) { 
-                    if($.Gmaps) {
-                        Gmap = $.Gmaps;
-                    } else{
-                        throw 'Não há nenhnum mapa para carregar a polyline!';
-                    }
-                }
                     
                 if(!PolylineOptions) {
                     PolylineOptions = options['PolylineOptions'];
                 }
+                
+                Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
                 
                 //Seta as opções da Polyline de rota
                 Gmap.Rota.setOptions(PolylineOptions);
@@ -79,8 +88,9 @@
                 //Passa um MVCArray para o Polyline da rota
                 Gmap.Rota.setPath(consts['Geometry'].encoding.decodePath(UrlEncoded));
                 
-                methods['centerMapByPath'].apply(this,new Array(Gmap));
+                methods['CenterMapByPath'].apply(this,new Array(Gmap));
                 
+                return Gmap;
             } catch(err) {
                 console.error('Erro: '+err);
             }
@@ -90,9 +100,9 @@
          * Centraliza o mapa baseado na rota atual
          * @param Gmap
          */ 
-        centerMapByPath: function (Gmap) {
+        CenterMapByPath: function (Gmap) {
             try {
-                if(!Gmap || typeof Gmap != 'object') throw '@param Gmap não foi informado ou ele não é um objeto'
+                Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
                 
                 path = Gmap.Rota.getPath();
 
@@ -110,25 +120,54 @@
         
         /**
          * Carrega marcadores
-         * @param markers object|array
-         * @param images string|array
-         * @param map object
+         * @param Markers object|array
+         * @param Gmap object
+         * @param MarkerOptions object
          */ 
-        LoadMarkers:function (markers,images,map){}
-        
-    /**
-         * Carrega infowindows, caso seja passado
-         * @param infoWindows object|array
-         * @param objects object|array
-         * @param map object
-         */
+        LoadMarkers:function (Markers, Gmap, MarkerOptions) {
+            try {
+                
+                if(typeof Markers != 'object') throw "@param markers deve ser do tipo array ou object";
+                Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
+                
+                if(!MarkerOptions)
+                    MarkerOptions = options['MarkerOptions'];
+                
+                //Define o map em que os marcadores deverão ser colocados
+                MarkerOptions.map = Gmap.Map;
+                
+                $(Markers).each(function (i,e) {
+                    
+                    //Define a posição do marcador
+                    MarkerOptions.position = new google.maps.LatLng(e.lat,e.lng);
+                    
+                    //Define o icone do marcador
+                    icon = null;
+                    if(e.icon) {
+                        
+                        //Verifica se há uma pasta padrão para icones
+                        if(typeof options['PathForIcons'] == 'string'){
+                            icon = options['PathForIcons']+'/'+e.icon;
+                        } else {
+                            icon = e.icon;
+                        }
+                    }
+                    MarkerOptions.icon = icon;
+                    
+                    Gmap.Markers.push(new google.maps.Marker(MarkerOptions));
+                });
+                
+                return $.Gmap = Gmap;
+            } catch (err) {
+                console.error('Erro: '+err);
+            }
+        }
     }
     
     var options = {
         
         /**
          * Opçoes do Objeto mapa 
-         * google.maps.MapOptions
          * https://developers.google.com/maps/documentation/javascript/reference?hl=#MapOptions
          */
         MapOptions: {
@@ -147,7 +186,6 @@
         
         /**
          * Opçoes do Objeto Rota(Polyline)
-         * google.maps.PolylineOptions
          * https://developers.google.com/maps/documentation/javascript/reference?hl=#PolylineOptions
          */ 
         PolylineOptions: {
@@ -155,7 +193,18 @@
             strokeOpacity: 0.6, 
             strokeWeight: 5,
             clickable: true
-        }
+        },
+        
+        /**
+         * Opções do Objeto de Marcador
+         * https://developers.google.com/maps/documentatin/javascript/reference?hl=pt-br#MarkerOptions
+         */
+        MarkerOptions: {},
+        
+        /**
+         * Caminho padrão dos icones de marcadores
+         */
+        PathForIcons: null
     }
     
     /**
@@ -186,7 +235,7 @@
     /**
      * Objeto Gmaps padrão
      */ 
-    $.Gmaps = null;
+    $.Gmap = null;
     
     /**
      * Função inicial do plugin Gmaps
@@ -242,7 +291,7 @@
             if(Len > 1) {
                 Return.push(methods['initMap'].apply(this, new Array(e)));
             } else {
-                Return = $.Gmaps = methods['initMap'].apply(this, new Array(e));
+                Return = $.Gmap = methods['initMap'].apply(this, new Array(e));
             }
         });
         
