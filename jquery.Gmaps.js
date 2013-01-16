@@ -150,6 +150,44 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
         },
         
         /**
+         * Prepara uma imagem pra ser exibida no browser, adicionando a pasta raiz caso 
+         * necessário
+         * @param Icon
+         * @param IconsFolder
+         */
+        ReturnIconUrl: function (Icon, IconsFolder) {
+            try {
+                //Valida @param Icon
+                if(Icon) {
+                    if(typeof Icon != 'string') throw "@param Icon não foi passado corretamente";
+                } else {
+                    return '';
+                }
+                
+                //Valida @param IconsFolder
+                //Verifica se @var IconsFolder não é string
+                if(typeof IconsFolder != 'string') {
+                    //Atribui o valor padrão para @var IconsFolder
+                    IconsFolder = options['IconsFolder']+'/';
+                    
+                    //Verifica se @var IconsFolder é não é string
+                    if(typeof IconsFolder != 'string' || IconsFolder == '/') {
+                        IconsFolder = '';
+                    }
+                }
+                
+                Icon =  IconsFolder+Icon;
+                
+                //Retira Barras duplas (//) caso haja alguma
+                Icon.replace('//','/');
+                
+                return Icon;
+            } catch (err) {
+                console.error('Erro: '+err);
+            }
+        },
+        
+        /**
          * Adiciona Mardadores por distanci
          * @param Gmap object
          * @param DistanceMarkerInterval int
@@ -175,7 +213,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                     icon = null;
                     if(TypeDistanceMarkerIcon) {
                         if(typeof TypeDistanceMarkerIcon == 'string') {
-                            icon = distanceMarkers+'.'+TypeDistanceMarkerIcon;
+                            icon = methods['ReturnIconUrl'].apply(this,new Array(distanceMarkers+'.'+TypeDistanceMarkerIcon));
                         }
                     }
                     
@@ -218,7 +256,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                     lat: latLng.lat(),
                     lng: latLng.lng(),
                     key: options['MarkerBeginKey'],
-                    icon: options['MarkerBeginImage']
+                    icon: methods['ReturnIconUrl'].apply(this,new Array(options['MarkerBeginImage']))
                 }
                 
                 //Adiciona o marcador
@@ -256,7 +294,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                     lat: latLng.lat(),
                     lng: latLng.lng(),
                     key: options['MarkerEndKey'],
-                    icon: options['MarkerEndImage']
+                    icon: methods['ReturnIconUrl'].apply(this,new Array(options['MarkerEndImage']))
                 }
                 
                 //Adiciona o marcador
@@ -327,15 +365,9 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                     
                     //Define o icone do marcador
                     icon = null;
-                    if(e.icon) {
-                        
-                        //Verifica se há uma pasta padrão para icones
-                        if(typeof options['PathForIcons'] == 'string'){
-                            icon = options['PathForIcons']+'/'+e.icon;
-                        } else {
-                            icon = e.icon;
-                        }
-                    }
+                    if(e.icon)
+                        icon = e.icon;
+                    
                     MarkerOptions.icon = icon;
                     
                     //Indice do novo marcador.
@@ -461,7 +493,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
         /**
          * Caminho padrão dos icones de marcadores
          */
-        PathForIcons: null,
+        IconsFolder: '',
                 
         /**
          * Indice do marcador de inicio

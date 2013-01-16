@@ -29,12 +29,15 @@ and open the template in the editor.
                         "icon":"coment.gif"
                     }];
                 
-                $('.map').Gmaps(
-                {
-                    PolylineOptions:{strokeColor:'#307BC2'},
+                GmapsOptions = {
+                    PolylineOptions:{
+                        strokeColor:'#307BC2'
+                    },
+                    IconsFolder: 'icons',
                     DistanceMarkerInterval:1000,
                     TypeDistanceMarkerIcon:'gif'
-                });
+                };
+                $('.map').Gmaps(GmapsOptions);
                 $('.map').Gmaps('LoadPolylineByUrlEncoded',Url2);
                 //map = $('.map').Gmaps('AddMarkers',coordenadas);
             });
