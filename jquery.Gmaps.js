@@ -1,3 +1,31 @@
+//Prototype
+if (!google.maps.Polyline.prototype.getPointAtDistance) {
+    google.maps.Polyline.prototype.getPointAtDistance = function(_Distance) {
+        var dist = 0, distAnterior = 0;
+
+        if (this.getPath().getLength() == 0)
+            return null;
+
+        if (_Distance == 0)
+            return this.getPath().getAt(0);
+
+        for (var i = 1; i < this.getPath().getLength() && dist < _Distance; i++) {
+            distAnterior = dist;
+            dist += google.maps.geometry.spherical.computeDistanceBetween(this.getPath().getAt(i), this.getPath().getAt(i - 1));
+        }
+        
+        if (dist >= _Distance) // passou da distância, estima o ponto intermediário
+        {
+            var p1 = this.getPath().getAt(i - 2);
+            var p2 = this.getPath().getAt(i - 1);
+            var m = (_Distance - distAnterior) / (dist - distAnterior);
+            return new google.maps.LatLng(p1.lat() + (p2.lat() - p1.lat()) * m, p1.lng() + (p2.lng() - p1.lng()) * m);
+        }
+        
+        return null;
+    }
+}
+
 (function( $ ){
     var methods = {
         
@@ -36,7 +64,12 @@
                  * Armazena um objeto google.maps.Polyline
                  * https://developers.google.com/maps/documentation/javascript/reference#Polyline
                  */
-                Rota: new google.maps.Polyline()
+                Rota: new google.maps.Polyline(),
+                
+                /**
+                 * Distancia da rota
+                 */
+                Distance: 0
             }
             
             //Inicia o map
@@ -77,6 +110,7 @@
                     PolylineOptions = options['PolylineOptions'];
                 }
                 
+                //Valida o objeto
                 Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
                 
                 //Seta as opções da Polyline de rota
@@ -88,7 +122,26 @@
                 //Passa um MVCArray para o Polyline da rota
                 Gmap.Rota.setPath(consts['Geometry'].encoding.decodePath(UrlEncoded));
                 
+                //Calcula a distancia da rota
+                Gmap.Distance = consts['Geometry'].spherical.computeLength(Gmap.Rota.getPath());
+                
+                //Centraliza o mapa
                 methods['CenterMapByPath'].apply(this,new Array(Gmap));
+                
+                //Verifica se é para colocar o marcador de inicio
+                if(options['MarkerBeginKey'] !== false && typeof options['MarkerBeginKey'] == 'string') {
+                    Gmap = methods['AddMarkerBegin'].apply(this,new Array(Gmap));
+                }
+                
+                //Verifica se é para colocar o marcador de fim
+                if(options['MarkerEndKey'] !== false && typeof options['MarkerEndKey'] == 'string') {
+                    Gmap = methods['AddMarkerEnd'].apply(this,new Array(Gmap));
+                }
+                
+                //Verifica se existe algum intervalo de marcadores definidos
+                if(typeof options['DistanceMarkerInterval'] == 'number' && options['DistanceMarkerInterval'] > 0) {
+                    Gmap = methods['AddDistanceMarkers'].apply(this,new Array(Gmap,options['DistanceMarkerInterval'],options['TypeDistanceMarkerIcon']));
+                }
                 
                 return Gmap;
             } catch(err) {
@@ -97,34 +150,165 @@
         },
         
         /**
+         * Adiciona Mardadores por distanci
+         * @param Gmap object
+         * @param DistanceMarkerInterval int
+         * @param TypeDistanceMarkerIcon bool
+         */ 
+        AddDistanceMarkers: function (Gmap,DistanceMarkerInterval,TypeDistanceMarkerIcon) {
+            try {
+                //Valida o objeto Gmap
+                Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
+                
+                //Quantia de marcadores a serem adicionados
+                distanceMarkers = Math.floor(Gmap.Distance / DistanceMarkerInterval);
+                
+                //Array de marcadores
+                markers = new Array();
+                
+                while(distanceMarkers > 0) {
+                    //LatLng do marcador da posição atual
+                    latLng = Gmap.Rota.getPointAtDistance(DistanceMarkerInterval * distanceMarkers)
+                    
+                    //Verifica se é para ser colocada uma imagem diferente
+                    // no marcador de distancia
+                    icon = null;
+                    if(TypeDistanceMarkerIcon) {
+                        if(typeof TypeDistanceMarkerIcon == 'string') {
+                            icon = distanceMarkers+'.'+TypeDistanceMarkerIcon;
+                        }
+                    }
+                    
+                    markers.push({
+                        lat: latLng.lat(),
+                        lng: latLng.lng(),
+                        icon: icon
+                    });
+                    distanceMarkers--;
+                }
+                
+                Gmap = methods['AddMarkers'].apply(this,new Array(markers, Gmap));
+            } catch (err) {
+                console.error('Erro: '+err.message);
+            }
+        },
+        
+        /**
+         * Adiciona marcador de inicio
+         * @param Gmap object
+         * @param MarkerOptions object
+         */
+        AddMarkerBegin: function (Gmap,MarkerOptions) {
+            try {
+                //Verifica se existe um indice para o marcador de inicio
+                if(!options['MarkerBeginKey'] || typeof options['MarkerBeginKey'] != 'string')
+                    throw "options['MarkerBeginKey'] não é valido";
+                
+                //Valida o objeto Gmap
+                Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
+                
+                //Pega o objeto path
+                path = Gmap.Rota.getPath();
+                
+                //Pega o objeto LatLng da primeira posição da rota
+                latLng = path.getAt(0);
+                
+                //Objeto Marker
+                Marker = {
+                    lat: latLng.lat(),
+                    lng: latLng.lng(),
+                    key: options['MarkerBeginKey'],
+                    icon: options['MarkerBeginImage']
+                }
+                
+                //Adiciona o marcador
+                Gmap = methods['AddMarkers'].apply(this,new Array(Marker, Gmap, MarkerOptions));
+                
+                return Gmap;
+                
+            } catch (err) {
+                console.error('Erro: '+err.message);
+            }
+        },
+        
+        /**
+         * Adiciona marcador de inicio
+         * @param Gmap object
+         * @param MarkerOptions object
+         */
+        AddMarkerEnd: function (Gmap,MarkerOptions) {
+            try {
+                //Verifica se existe um indice para o marcador de inicio
+                if(!options['MarkerEndKey'] || typeof options['MarkerEndKey'] != 'string')
+                    throw "options['MarkerEndKey'] não é valido";
+                
+                //Valida o objeto Gmap
+                Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
+                
+                //Pega o objeto path
+                path = Gmap.Rota.getPath();
+                
+                //Pega o objeto LatLng da primeira posição da rota
+                latLng = path.getAt(path.length - 1);
+                
+                //Objeto Marker
+                Marker = {
+                    lat: latLng.lat(),
+                    lng: latLng.lng(),
+                    key: options['MarkerEndKey'],
+                    icon: options['MarkerEndImage']
+                }
+                
+                //Adiciona o marcador
+                Gmap = methods['AddMarkers'].apply(this,new Array(Marker, Gmap, MarkerOptions));
+                
+                return Gmap;
+                
+            } catch (err) {
+                console.error('Erro: '+err.message);
+            }
+        },
+        
+        /**
+         * Adiciona marcadores por distância
+         * @param Gmap
+         */ 
+        
+        /**
          * Centraliza o mapa baseado na rota atual
          * @param Gmap
          */ 
         CenterMapByPath: function (Gmap) {
             try {
+                //Valida o objeto Gmap
                 Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
                 
+                //Pega o objeto path
                 path = Gmap.Rota.getPath();
-
+                
+                //Instancia um objeto LatLngBounds
+                //https://developers.google.com/maps/documentation/javascript/reference?hl=pt-br#LatLngBounds
                 bounds = new google.maps.LatLngBounds();
+                
                 path.forEach(function (e) {
                     bounds.extend(e);
                 });
 
                 Gmap.Map.fitBounds(bounds);
                 
+                return Gmap;
             } catch(err) {
-                console.error('Erro: '+err);
+                console.error('Erro: '+err.message);
             }
         },
         
         /**
          * Carrega marcadores
-         * @param Markers object|array
+         * @param Markers array
          * @param Gmap object
          * @param MarkerOptions object
          */ 
-        LoadMarkers:function (Markers, Gmap, MarkerOptions) {
+        AddMarkers:function (Markers, Gmap, MarkerOptions) {
             try {
                 
                 if(typeof Markers != 'object') throw "@param markers deve ser do tipo array ou object";
@@ -157,7 +341,13 @@
                     //Indice do novo marcador.
                     k = Gmaps.Markers.length;
                     
-                    Gmap.Markers.push(new google.maps.Marker(MarkerOptions));
+                    //Verifica se existe um indice padrão do marcador
+                    if(e.key) {
+                        Gmap.Markers[e.key] = new google.maps.Marker(MarkerOptions);
+                        k = e.key;
+                    } else {
+                        Gmap.Markers.push(new google.maps.Marker(MarkerOptions));
+                    }
                     
                     //Verifica se existe algum texto para relacionar ao marcador
                     if(e.text) {
@@ -166,9 +356,9 @@
                     }
                 });
                 
-                return $.Gmap = Gmap;
+                return Gmap;
             } catch (err) {
-                console.error('Erro: '+err);
+                console.error('Erro: '+err.message);
             }
         },
         
@@ -220,7 +410,7 @@
                 
                 return Gmap;
             } catch (err) {
-                console.error('Erro: '+err);
+                console.error('Erro: '+err.message);
             }
         }
     }
@@ -271,7 +461,41 @@
         /**
          * Caminho padrão dos icones de marcadores
          */
-        PathForIcons: null
+        PathForIcons: null,
+                
+        /**
+         * Indice do marcador de inicio
+         * Se for FALSE, quer dizer que a opção é invalida
+         */
+        MarkerBeginKey: 'begin',
+        
+        /**
+         * Imagem do marcador de inicio
+         */
+        MarkerBeginImage: 'inicio.gif',
+        
+        /**
+         * Indice do marcador de fim
+         * Se for FALSE, quer dizer que a opção é invalida
+         */
+        MarkerEndKey: 'begin',
+        
+        /**
+         * Imagem do marcador de Fim
+         */
+        MarkerEndImage: 'fim.gif',
+        
+        /**
+         * Coloca marcadores no intervalo de distancia dessa variavel
+         * Se for 0 ou false, não acrecenta marcadores de distancias
+         */
+        DistanceMarkerInterval:0,
+        
+        /**
+         * prefixo da imagem do marcador de distancia
+         */
+        TypeDistanceMarkerIcon: false
+        
     }
     
     /**
@@ -319,9 +543,13 @@
                         console.error('Ocorreu um erro com o tipo de indice do array passado');
                         return;
                     }
-                       
-                    //Altera o valor padrão da @var options[i]
-                    options[i] = $.extend(options[i],option[i]);
+                    
+                    if(typeof option[i] == 'object') {
+                        //Altera o valor padrão da @var options[i]
+                        options[i] = $.extend(options[i],option[i]);
+                    } else {
+                        options[i] = option[i];
+                    }
                 }
                 break;
                 
@@ -345,7 +573,6 @@
                 break;
                 
         }
-        
         var Len = this.length;
         var Return = new Array();
         
