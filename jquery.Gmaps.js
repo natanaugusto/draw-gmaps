@@ -213,7 +213,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                     icon = null;
                     if(TypeDistanceMarkerIcon) {
                         if(typeof TypeDistanceMarkerIcon == 'string') {
-                            icon = methods['ReturnIconUrl'].apply(this,new Array(distanceMarkers+'.'+TypeDistanceMarkerIcon));
+                            icon = distanceMarkers+'.'+TypeDistanceMarkerIcon;
                         }
                     }
                     
@@ -256,7 +256,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                     lat: latLng.lat(),
                     lng: latLng.lng(),
                     key: options['MarkerBeginKey'],
-                    icon: methods['ReturnIconUrl'].apply(this,new Array(options['MarkerBeginImage']))
+                    icon: options['MarkerBeginImage']
                 }
                 
                 //Adiciona o marcador
@@ -294,7 +294,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                     lat: latLng.lat(),
                     lng: latLng.lng(),
                     key: options['MarkerEndKey'],
-                    icon: methods['ReturnIconUrl'].apply(this,new Array(options['MarkerEndImage']))
+                    icon: options['MarkerEndImage']
                 }
                 
                 //Adiciona o marcador
@@ -366,7 +366,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                     //Define o icone do marcador
                     icon = null;
                     if(e.icon)
-                        icon = e.icon;
+                        icon = methods['ReturnIconUrl'].apply(this,new Array(e.icon));
                     
                     MarkerOptions.icon = icon;
                     
