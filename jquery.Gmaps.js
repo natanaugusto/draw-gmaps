@@ -30,16 +30,16 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
     var methods = {
         
         /**
-         * Função inicial do sistema
+         * Cria um novo objeto Gmap relacionado a uma div
          * @param Div HTML Element
          */ 
-        initMap: function (Div){
+        NewGmap: function (Div){
             if(!Div) {
                 console.error('Nenhuma div encontrada');
                 return false;
             }
             
-            Gmaps = {
+            Gmap = {
         
                 /**
                  * Armazena o objeto Google Map
@@ -73,8 +73,16 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
             }
             
             //Inicia o map
-            Gmaps.Map = new google.maps.Map(Div, options['MapOptions']);
-            return Gmaps;
+            Gmap.Map = new google.maps.Map(Div, options['MapOptions']);
+            return Gmap;
+        },
+        
+        /**
+         * Inicia um grávico de elevação
+         * @param Gmap object
+         */ 
+        NewElevationChart: function (Gmap) {
+            
         },
         
         /**
@@ -615,9 +623,9 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
          */
         this.each(function(i,e) {
             if(Len > 1) {
-                Return.push(methods['initMap'].apply(this, new Array(e)));
+                Return.push(methods['NewGmap'].apply(this, new Array(e)));
             } else {
-                Return = $.Gmap = methods['initMap'].apply(this, new Array(e));
+                Return = $.Gmap = methods['NewGmap'].apply(this, new Array(e));
             }
         });
         
