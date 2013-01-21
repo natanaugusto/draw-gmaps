@@ -11,6 +11,32 @@ and open the template in the editor.
         <script type="text/javascript" src="https://maps.google.com/maps/api/js?v=3.9&libraries=geometry&sensor=false"></script>
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
         <script type="text/javascript" src="jquery.Gmaps.js"></script>
+        <style>
+            html{
+                margin: 0;
+                padding: 0;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .map {
+                position: absolute;
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+            .elevation {
+                position: absolute;
+                display: block;
+                width: 100%;
+                height: 30%;
+                background: #4478AF;
+                opacity:0.6;
+                filter:alpha(opacity=60);
+                top:70%
+            }
+        </style>
         <script type="text/javascript">
             $(document).ready(function(){
                 Url = 'n~imCtpf|GfHuDg@oCxCiG|C~@hCUxCqEhAfADfF~FVzDwAj@cAYeCrAoCxA^gA{MsAg@lD_MmEwB~Hs]_AeBqKgB';
@@ -40,37 +66,13 @@ and open the template in the editor.
                 $('.map').Gmaps(GmapsOptions);
                 $('.map').Gmaps('LoadPolylineByUrlEncoded',Url);
                 map = $('.map').Gmaps('AddMarkers',coordenadas);
+                
+                $('.elevation').Gmaps('NewElevationChart',map);
             });
         </script>
-        <style>
-            html{
-                margin: 0;
-                padding: 0;
-            }
-            body {
-                margin: 0;
-                padding: 0;
-            }
-            .map {
-                position: absolute;
-                display: block;
-                width: 100%;
-                height: 100%;
-            }
-            .elevation {
-                position: absolute;
-                display: block;
-                width: 100%;
-                height: 30%;
-                background: #4478AF;
-                opacity:0.6;
-                filter:alpha(opacity=60);
-                top:70%
-            }
-        </style>
     </head>
     <body>
         <div class="map">Mapa</div>
-        <!--<div class="elevation">Elevação</div>-->
+        <div class="elevation">Elevação</div>
     </body>
 </html>

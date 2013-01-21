@@ -1,3 +1,7 @@
+//Carrega o pacote de visualization do google
+google.load("visualization", "1", {
+    packages: ["columnchart"]
+});
 //Prototype
 if (!google.maps.Polyline.prototype.getPointAtDistance) {
     google.maps.Polyline.prototype.getPointAtDistance = function(_Distance) {
@@ -78,14 +82,6 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
         },
         
         /**
-         * Inicia um grávico de elevação
-         * @param Gmap object
-         */ 
-        NewElevationChart: function (Gmap) {
-            
-        },
-        
-        /**
          * Valida o objeto Gmap
          * @param Gmap object
          */
@@ -100,6 +96,81 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
             }
             
             return Gmap;
+        },
+        
+        /**
+         * Inicia um grávico de elevação
+         * @param Gmap object
+         */ 
+        NewElevationChart: function (Gmap) {
+            try {
+                //Valida o objeto
+                Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
+                
+                //Adiciona um id ao elemento passado(caso o mesmo não tenha id)
+                if(!$(this).attr('id')) {
+                    
+                    //Executa um bloco de instruções para gerar um id sem conflito
+                    do {
+                        //Gera um novo id
+                        id = $(this).attr('class')+Math.floor(Math.random()*100);
+                        
+                        //Atribui o id ao elemento
+                        $(this).attr('id',id);
+                    } while ($('#'+id).length > 1)
+                    
+                } else {
+                    id = $(this).attr('id');
+                }
+                
+                //Pega o elemento html para ser gerado o gráfico
+                chart = document.getElementById(id);
+                
+                //Cria uma instancia do objeto ColumnChart
+                Gmap.ElevationChart = new google.visualization.ColumnChart(chart);
+                
+                /*Adiciona o evento que faz com que um marcador percorra a rota enquanto o
+                //mouse passa sobre o gráfico de altimetria
+                google.visualization.events.addListener(Gmap.ElevationChart,'onmouseover',function (e) {
+                    
+                    //Cria um marcador de elevação
+                    if(!Gmap.Markers['ElevationMarker']) {
+                        
+                        //Latitude e longitude do ponto atual
+                        latLng = e.po
+                        mark = 
+                        Gmap = methods['AddMarkers'].apply(this,new Array())
+                    }
+                });*/
+                
+                
+                //Instancia um objeto DataTable
+                Gmap.Data = new google.visualization.DataTable();
+                
+                //Adiciona colunas
+                Gmap.Data.addColumn('string','Sample');
+                Gmap.Data.addColumn('number','Elevação');
+                
+                //Pega a path da Rota em array
+                path = Gmap.Rota.getPath().getArray();
+                
+                //Adiciona os elementos de path ao grafico de elevação
+                for(i in path) {
+                    methods['AddElevationDate'].apply(this,new Array(path[i]));
+                }
+                
+                return $.Gmap = Gmap;
+            } catch(err) {
+                console.error('Erro: '+err);
+            }
+        },
+        
+        /**
+         * Adiciona os elementos de path ao grafico de elevação
+         * @param Array Array
+         */
+        AddElevationDate: function (Array) {
+            
         },
         
         /**
@@ -379,7 +450,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                     MarkerOptions.icon = icon;
                     
                     //Indice do novo marcador.
-                    k = Gmaps.Markers.length;
+                    k = Gmap.Markers.length;
                     
                     //Verifica se existe um indice padrão do marcador
                     if(e.key) {
@@ -560,7 +631,18 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
          * https://developers.google.com/maps/documentation/javascript/reference?hl=pt-br#spherical
          * https://developers.google.com/maps/documentation/javascript/reference?hl=pt-br#poly
          */ 
-        Geometry: google.maps.geometry
+        Geometry: google.maps.geometry,
+        
+        /**
+         * Intancia do objeto ElevationService
+         * https://developers.google.com/maps/documentation/elevation/
+         */
+        ElevationService: new google.maps.ElevationService(),
+        
+        /**
+         * Auxilio de ElevationService
+         */
+        ElevationSample: 256
     }
     
     /**
