@@ -156,7 +156,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                 
                 //Adiciona os elementos de path ao grafico de elevação
                 for(i in path) {
-                    methods['AddElevationDate'].apply(this,new Array(path[i]));
+                    methods['AddElevationDate'].apply(this,new Array(path[i],Gmap));
                 }
                 
                 return $.Gmap = Gmap;
@@ -167,10 +167,41 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
         
         /**
          * Adiciona os elementos de path ao grafico de elevação
-         * @param Array Array
+         * @param LatLngsArray Array
+         * @param Gmap object
          */
-        AddElevationDate: function (Array) {
-            
+        AddElevationDate: function (LatLngsArray, Gmap) {
+            try {
+                //Valida o objeto
+                Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
+                
+                //Verifica a @var Elevation do objeto Gmap
+                if(!Gmap.Elevation)
+                    Gmap.Elevation = new Array();
+                
+                //Quantia de LatLngs da @var Gmap.Elevation
+                lenElevation = Gmap.Elevation.length;
+                
+                //Array para adicionar rows aos graficos
+                arrayRows = new Array();
+                
+                //Adiciona os valores de @var Gmap.Elevation e @var arrayRows
+                for (i in LatLngsArray) {
+                    Gmap.Elevation.push(LatLngsArray[i]);
+                    
+                    //Adiciona o ultimo elemento inserido na @var Gmap.Elevation 
+                    //na @var arrayRows
+                    arrayRows.push(['',Gmap.Elevation[lenElevation+i]]);
+                }
+                
+                //Adiciona array
+                Gmap.Data.addRows(arrayRows);
+                
+                //Gera o gráfico
+                Gmap.ElevationChart.draw(Gmap.Data,options['ElevationChartOptions'])
+            } catch(err) {
+                console.error('Erro: '+err);
+            }
         },
         
         /**
@@ -555,6 +586,17 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
             strokeOpacity: 0.6, 
             strokeWeight: 5,
             clickable: true
+        },
+        
+        /**
+         * Opções de Charts
+         */ 
+        ElevationChartOptions: {
+            width: 945,
+            height: 270,
+            legend: 'none',
+            titleY: 'Elevação (m)',
+            focusBorderColor: '#00ff00'
         },
         
         /**
