@@ -156,7 +156,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                 
                 //Adiciona os elementos de path ao grafico de elevação
                 for(i in path) {
-                    methods['AddElevationDate'].apply(this,new Array(path[i],Gmap));
+                    methods['GetElevation'].apply(this,new Array(path[i]));
                 }
                 
                 return $.Gmap = Gmap;
@@ -166,12 +166,26 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
         },
         
         /**
-         * Adiciona os elementos de path ao grafico de elevação
-         * @param LatLngsArray Array
-         * @param Gmap object
+         * Pega a elevação da rota
          */
-        AddElevationDate: function (LatLngsArray, Gmap) {
+        GetElevation: function (Path) {
             try {
+                 options['ElevationService'].getElevationAlongPath({
+                     path:Path,
+                     samples: options['Samples']
+                 }, methods['AddElevationDate']);
+            } catch(err) {
+                console.error('Erro: '+err);
+            }
+        },
+        
+        /**
+         * Adiciona os elementos de path ao grafico de elevação
+         * @param Path Array
+         */
+        AddElevationDate: function (Path) {
+            try {
+                console.log(Path);
                 //Valida o objeto
                 Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
                 
@@ -186,8 +200,8 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                 arrayRows = new Array();
                 
                 //Adiciona os valores de @var Gmap.Elevation e @var arrayRows
-                for (i in LatLngsArray) {
-                    Gmap.Elevation.push(LatLngsArray[i]);
+                for (i in Path) {
+                    Gmap.Elevation.push(Path[i]);
                     
                     //Adiciona o ultimo elemento inserido na @var Gmap.Elevation 
                     //na @var arrayRows
@@ -198,7 +212,9 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                 Gmap.Data.addRows(arrayRows);
                 
                 //Gera o gráfico
-                Gmap.ElevationChart.draw(Gmap.Data,options['ElevationChartOptions'])
+                Gmap.ElevationChart.draw(Gmap.Data,options['ElevationChartOptions']);
+                
+                $.Gmaps = Gmap;
             } catch(err) {
                 console.error('Erro: '+err);
             }
@@ -598,6 +614,17 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
             titleY: 'Elevação (m)',
             focusBorderColor: '#00ff00'
         },
+        
+        /*
+         * Objeto Elevation
+         * https://developers.google.com/maps/documentation/javascript/reference?hl=en#ElevationService
+         */
+        ElevationService: new google.maps.ElevationService(),
+        
+        /**
+         * Usado na elevação
+         */ 
+        Samples: 256,
         
         /**
          * Opções do Objeto de Marcador
