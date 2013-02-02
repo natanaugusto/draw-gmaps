@@ -129,21 +129,6 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                 //Cria uma instancia do objeto ColumnChart
                 Gmap.ElevationChart = new google.visualization.ColumnChart(chart);
                 
-                /*Adiciona o evento que faz com que um marcador percorra a rota enquanto o
-                //mouse passa sobre o gráfico de altimetria
-                google.visualization.events.addListener(Gmap.ElevationChart,'onmouseover',function (e) {
-                    
-                    //Cria um marcador de elevação
-                    if(!Gmap.Markers['ElevationMarker']) {
-                        
-                        //Latitude e longitude do ponto atual
-                        latLng = e.po
-                        mark = 
-                        Gmap = methods['AddMarkers'].apply(this,new Array())
-                    }
-                });*/
-                
-                
                 //Instancia um objeto DataTable
                 Gmap.Data = new google.visualization.DataTable();
                 
@@ -153,7 +138,6 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                 
                 //Pega a path da Rota em array
                 path = Gmap.Rota.getPath().getArray();
-                
                 //Adiciona os elementos de path ao grafico de elevação
                 for(i in path) {
                     methods['GetElevation'].apply(this,new Array(path[i]));
@@ -170,6 +154,7 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
          */
         GetElevation: function (Path) {
             try {
+                console.log(Path);
                  options['ElevationService'].getElevationAlongPath({
                      path:Path,
                      samples: options['Samples']
