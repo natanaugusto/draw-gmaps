@@ -125,6 +125,9 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                 
                 //Pega o elemento html para ser gerado o gráfico
                 chart = document.getElementById(id);
+
+                //Id do objeto de gráficos
+                Gmap.IdElevationChart = id;
                 
                 //Cria uma instancia do objeto ColumnChart
                 Gmap.ElevationChart = new google.visualization.ColumnChart(chart);
@@ -138,9 +141,29 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                 
                 //Pega a path da Rota em array
                 path = Gmap.Rota.getPath().getArray();
-                //Adiciona os elementos de path ao grafico de elevação
+                a = 0;
+                b = 0;
+                array = new Array();
+
                 for(i in path) {
-                    methods['GetElevation'].apply(this,new Array(path[i]));
+                    if(a <= 200) {
+                        if($.isArray(array[b])) {
+                            array[b][a]=path[i];
+                        } else {
+                            array[b] = new Array();
+                            array[b][a]=path[i];
+                        }
+                        a++;
+                    } else {
+                        b++;
+                        a = 0;
+                        array[b] = new Array();
+                        array[b][a]=path[i];
+                    }
+                }
+                //Adiciona os elementos de path ao grafico de elevação
+                for(i in array) {
+                    methods['GetElevation'].apply(this,new Array(array[i]));
                 }
                 
                 return $.Gmap = Gmap;
@@ -152,11 +175,10 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
         /**
          * Pega a elevação da rota
          */
-        GetElevation: function (Path) {
+        GetElevation: function (path) {
             try {
-                console.log(Path);
                  options['ElevationService'].getElevationAlongPath({
-                     path:Path,
+                     path:path,
                      samples: options['Samples']
                  }, methods['AddElevationDate']);
             } catch(err) {
@@ -166,11 +188,10 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
         
         /**
          * Adiciona os elementos de path ao grafico de elevação
-         * @param Path Array
+         * @param path Array
          */
-        AddElevationDate: function (Path) {
+        AddElevationDate: function (path) {
             try {
-                console.log(Path);
                 //Valida o objeto
                 Gmap = methods['ValideteGmap'].apply(this,new Array(Gmap));
                 
@@ -183,19 +204,26 @@ if (!google.maps.Polyline.prototype.getPointAtDistance) {
                 
                 //Array para adicionar rows aos graficos
                 arrayRows = new Array();
-                
+
                 //Adiciona os valores de @var Gmap.Elevation e @var arrayRows
-                for (i in Path) {
-                    Gmap.Elevation.push(Path[i]);
+                for (i in path) {
+                    Gmap.Elevation.push(path[i]);
+
+                    k = parseInt(lenElevation) + parseInt(i);
                     
                     //Adiciona o ultimo elemento inserido na @var Gmap.Elevation 
                     //na @var arrayRows
-                    arrayRows.push(['',Gmap.Elevation[lenElevation+i]]);
+                    arrayRows.push(['',Gmap.Elevation[k].elevation]);
                 }
                 
                 //Adiciona array
                 Gmap.Data.addRows(arrayRows);
-                
+
+                //Passa largura e altura do gráfico
+                divChart = $(Gmap.IdElevationChart);
+                options['ElevationChartOptions'].width = divChart.innerWidth();
+                options['ElevationChartOptions'].height = divChart.innerHeight();
+
                 //Gera o gráfico
                 Gmap.ElevationChart.draw(Gmap.Data,options['ElevationChartOptions']);
                 
